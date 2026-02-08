@@ -1,3 +1,4 @@
+require 'custom.default'
 --[[
 
 =====================================================================
@@ -102,7 +103,7 @@ vim.g.have_nerd_font = false
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.o.relativenumber = true
+vim.o.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
@@ -114,9 +115,9 @@ vim.o.showmode = false
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.schedule(function()
-  vim.o.clipboard = 'unnamedplus'
-end)
+-- vim.schedule(function()
+--   vim.o.clipboard = 'unnamedplus'
+-- end)
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -436,6 +437,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>sG', builtin.git_status, { desc = '[S]earch [G]it status' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -459,6 +461,53 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      -- Custom picker for merge conflicts
+      local function list_merge_conflicts()
+        local finders = require "telescope.finders"
+        local pickers = require "telescope.pickers"
+        local conf = require("telescope.config").values
+        local previewers = require "telescope.previewers"
+        local find = require "plenary.find"
+
+        local results = vim.fn.systemlist("git diff --name-only --diff-filter=U")
+        if vim.v.shell_error ~= 0 then
+          -- Silently exit if not a git repo or no conflicts
+          return
+        end
+        if #results == 0 then
+          vim.notify("No merge conflicts found.", vim.log.levels.INFO)
+          return
+        end
+
+        local opts = {}
+
+        local custom_previewer = previewers.new_buffer_previewer {
+          get_buffer_by_name = function(_, entry)
+            return entry.value
+          end,
+          define_preview = function(self, entry, status)
+            previewers.buffer_previewer_maker(self, entry, status)
+            vim.api.nvim_buf_call(self.state.bufh, function()
+              local starting_line, _ = find.find_in_buf(0, "<<<<<<<", 1)
+              if starting_line then
+                vim.api.nvim_win_set_cursor(self.state.winid, { starting_line, 0 })
+              end
+            end)
+          end,
+        }
+
+        pickers.new(opts, {
+          prompt_title = "Merge Conflicts",
+          finder = finders.new_table {
+            results = results,
+          },
+          sorter = conf.generic_sorter(opts),
+          previewer = custom_previewer,
+        }):find()
+      end
+
+      vim.keymap.set("n", "<leader>scm", list_merge_conflicts, { desc = "[S]earch [C]onflicted [M]erge files" })
     end,
   },
 
@@ -894,7 +943,8 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'gruvbox'
     end,
   },
 
@@ -973,18 +1023,18 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
