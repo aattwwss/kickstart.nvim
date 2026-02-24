@@ -1,6 +1,7 @@
 return {
   {
-    'ThePrimeagen/99',
+    'aattwwss/99',
+    branch = 'support-qwen',
     config = function()
       local _99 = require('99')
       local Providers = require('99.providers')
@@ -9,19 +10,10 @@ return {
       local basename = vim.fs.basename(cwd)
 
       _99.setup({
-        -- Use Claude Code as the AI provider
-        provider = Providers.ClaudeCodeProvider,
-        -- Supported Claude models:
-        --   claude-sonnet-4-5-20250929
-        --   claude-opus-4-5-20251101
-        --   claude-opus-4-6
-        --   claude-opus-4-1-20250805
-        --   claude-opus-4-20250514
-        --   claude-sonnet-4-20250514
-        --   claude-3-7-sonnet-20250219
-        --   claude-haiku-4-5-20251001
-        --   claude-3-5-haiku-20241022
-        model = 'claude-sonnet-4-5-20250929',
+        -- Use Qwen as the AI provider
+        provider = Providers.QwenProvider,
+        -- Supported Qwen models:
+        model = 'coder-model', -- or other Qwen models as needed
 
         -- Optional: debug logging
         logger = {
@@ -33,7 +25,8 @@ return {
         -- Auto-discover context files walking up from current file
         md_files = {
           'AGENT.md',
-          'CLAUDE.md',
+          'CLAUDE.md', -- Keeping CLAUDE.md as requested
+          -- 'QWEN.md', -- Uncomment if you want to add Qwen-specific file
         },
 
         -- Skill completion (note: only supports nvim-cmp, not blink.cmp)
