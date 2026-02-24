@@ -1,15 +1,14 @@
 return {
   {
     'aattwwss/99',
-    branch = 'support-qwen',
     config = function()
-      local _99 = require('99')
-      local Providers = require('99.providers')
+      local _99 = require '99'
+      local Providers = require '99.providers'
 
       local cwd = vim.uv.cwd()
       local basename = vim.fs.basename(cwd)
 
-      _99.setup({
+      _99.setup {
         -- Use Qwen as the AI provider
         provider = Providers.QwenProvider,
         -- Supported Qwen models:
@@ -35,7 +34,7 @@ return {
           source = nil,
           custom_rules = {},
         },
-      })
+      }
 
       -- Visual mode: send selection to AI with prompt
       vim.keymap.set('v', '<leader>9v', function()
